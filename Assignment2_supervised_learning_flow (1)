@@ -1,0 +1,166 @@
+# Assignment2 - Supervised Learning flow
+# Part 1(a) Student details:
+* Please write the First-Name, First letter of Last-Name and last 4 digits of the i.d. for each student. 
+# student details 1: rotem aloni 8028
+# student details 2: aviv meir 9752
+
+#The classification problem is based on a dataset of different types of wines.
+#The goal is to predict the type of wine (class) based on chemical features such as alcohol level, acidity, magnesium, color, and more.
+#This is a multiclass classification problem, with three different categories of wines.
+## Part 1(b) - Chat-GPT/other AI-agent/other assistance used:
+* If you changed the prompt until you got a satisfying answer, please add all versions
+* don't delete "pre" tags, so new-line is supported
+* double click the following markdown cell to change
+* press shift+enter to view
+* Add information:
+#### Add information in this Markdown cell (double click to change, shift-enter to view)
+<pre>   
+AI agent name: ChatGPT
+Goal: receive assistance with implementing and debugging specific parts of the machine learning workflow, including feature engineering, model evaluation, and validation strategy. 
+Propmpt1: can you help me writing correctly KNN and Random forest to classify wine correctly ?
+    
+Propmpt2: can you explain me if I did correctly Cross Validation setup?, follow the assignment instrections
+    
+Propmpt3: 
+
+Other assistanse: no
+</pre>
+## Part 1(c) - Learning Problem and dataset explaination.
+* Please explain in one paragraph
+* don't delete "pre" tags, so new-line is supported
+* double click the following markdown cell to change
+* press shift+enter to view
+* Add explaining text:
+#### Add information in this Markdown cell (double click to change, shift-enter to view)
+<pre>
+
+
+
+
+    
+</pre>
+## Part 2 - Initial Preparations 
+You could add as many code cells as needed
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+train_df = pd.read_csv('wine_train.csv')
+test_df = pd.read_csv('wine_test.csv')
+
+
+display(train_df.head())
+display(test_df.head())
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(6, 4))
+sns.countplot(x='target', data=train_df)
+plt.title("Class Distribution (Train Set)")
+plt.xlabel("Wine Class")
+plt.ylabel("Count")
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(14, 10))
+sns.heatmap(train_df.corr(), annot=True, fmt=".2f", cmap="coolwarm")
+plt.title("Correlation Matrix")
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=train_df, x='alcohol', y='malic_acid', hue='target', palette='deep')
+plt.title("Alcohol vs. Malic Acid by Class")
+plt.xlabel("Alcohol")
+plt.ylabel("Malic Acid")
+plt.tight_layout()
+plt.show()
+
+## Part 3 - Experiments
+You could add as many code cells as needed
+train_df['alcohol_to_ash'] = train_df['alcohol'] / train_df['ash']
+
+X_train = train_df.drop('target', axis=1)
+y_train = train_df['target']
+
+X_test = test_df.drop('target', axis=1)
+y_test = test_df['target']
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.metrics import f1_score, classification_report
+from sklearn.neighbors import KNeighborsClassifier
+
+
+params = {
+    'n_estimators': [50, 100],
+    'max_depth': [None, 5, 10]
+}
+
+clf = RandomForestClassifier(random_state=42)
+
+grid = GridSearchCV(clf, params, cv=5, scoring='f1_macro', return_train_score=True)
+grid.fit(X_train, y_train)
+
+print("Best parameters:", grid.best_params_)
+print("Best F1 macro:", grid.best_score_)
+
+
+knn_params = {
+    'n_neighbors': [3, 5, 7],
+    'weights': ['uniform', 'distance']
+}
+
+knn = KNeighborsClassifier()
+
+knn_grid = GridSearchCV(knn, knn_params, cv=5, scoring='f1_macro', return_train_score=True)
+knn_grid.fit(X_train, y_train)
+
+print("KNN - Best Parameters:", knn_grid.best_params_)
+print("KNN - Best F1 Macro Score:", knn_grid.best_score_)
+results_df = pd.DataFrame({
+    'Model': ['Random Forest', 'KNN'],
+    'Best Params': [grid.best_params_, knn_grid.best_params_],
+    'F1 Macro (CV avg)': [grid.best_score_, knn_grid.best_score_]
+})
+
+display(results_df)
+## Part 4 - Training 
+Use the best combination of feature engineering, model (algorithm and hyperparameters) from the experiment part (part 3)
+best_model = grid.best_estimator_
+best_model.fit(X_train, y_train)
+
+
+pd.DataFrame({
+    "True Label": y_test.values[:5],
+    "Prediction": y_pred[:5]
+})
+
+## Part 5 - Apply on test and show model performance estimation
+
+
+train_df['alcohol_to_ash'] = train_df['alcohol'] / train_df['ash']
+test_df['alcohol_to_ash'] = test_df['alcohol'] / test_df['ash']
+
+X_train = train_df.drop('target', axis=1)
+y_train = train_df['target']
+X_test = test_df.drop('target', axis=1)
+y_test = test_df['target']
+
+params = {
+    'n_estimators': [50, 100],
+    'max_depth': [None, 5, 10]
+}
+
+clf = RandomForestClassifier(random_state=42)
+
+grid = GridSearchCV(clf, params, cv=5, scoring='f1_macro', return_train_score=True)
+grid.fit(X_train, y_train)
+
+print("Best parameters:", grid.best_params_)
+print("Best F1 macro (CV):", grid.best_score_)
+
+y_pred = grid.best_estimator_.predict(X_test)
+print("\nClassification Report on Test Set:")
+print(classification_report(y_test, y_pred))
+
